@@ -35,22 +35,54 @@ app.get('/api/messages', (req, res, err) =>
 	.catch(err)
 )
 
-app.post('/api/messages',(req, res, err) => {
-	const msg = req.body
-	Message
-		.create(msg)
-		.then( msg => res.send({msg}))
-		.catch(err)
-})
+app.post('/api/messages', createMessage)
 
 
 mongoose.Promise = Promise
 mongoose.connect(MONGODB_URL, () =>
 	server.listen(PORT, () => console.log(`Listening on port: ${PORT}`))
 )
+// create a callback that can handle both rest and sockets
+function createMessage(reqOrMsg, res, next) {
+	const msg = reqOrMsg.body || reqOrMsg
+
+	Message
+		.create(msg)
+		.then( msg => {
+			io.emit('newMessage', msg)
+			return msg
+		})
+		.then(msg => res && res.status(201).json(msg))
+		.catch( err => {
+			if (next) {
+				return next(err)
+			}
+			console.error(err)
+		})
+	//combine these two into the above code
+
+	// req, res, err) => {
+	// Message
+	// 	.create(req.body)
+	// 	.then(msg => {
+	// 		io.emit('newMessage', msg)
+	// 		return msg
+	// 	})
+	// 	.then( msg => res.send({msg}))
+	// 	.catch(err)
+
+	// msg =>
+	// 	Message
+	// 	.create(msg)
+	// 	.then( msg => io.emit('newMessage', msg))
+	// 	.catch(console.error)
+
+
+}
 
 
 io.on('connection', socket => {
 	console.log(`Socket connected: ${socket.id}`)
 	socket.on('disconnect', () => console.log(`Socket disconnected: ${socket.id}`))
+	socket.on('postMessage', createMessage)
 })

@@ -31,12 +31,23 @@ angular
 				author: $scope.author,
 				content: $scope.content
 			}
+			//instead of angular handling post we use the socket
+			if (socket.connected) {
+				return socket.emit('postMessage', msg)
+			}
 			$http.post('api/messages', msg)
 			.then(() => $scope.messages.push(msg))
 		}
-
+		//populating the initial messages
 		$http.get('/api/messages')
 			.then(({data: {messages}}) => {
 				$scope.messages = messages
 			})
+
+		//receive new message
+		socket.on('newMessage', msg => {
+			$scope.messages.push(msg)
+			//scope.apply for async stuff
+			$scope.$apply()
+		})
 	})
