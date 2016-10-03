@@ -1,0 +1,14 @@
+<h1>Welcome to the Chat Room</h1>
+
+<form ng-submit="sendMessage()">
+	<input type="text" placeholder="John Doe" ng-model="author">
+	<input type="text" placeholder="message..." ng-model="content">
+	<input type="submit">
+</form>
+
+<hr />
+<ul>
+	<li ng-repeat="msg in messages">
+		{{msg.author}}: {{msg.content}}
+		</li>
+</ul>
