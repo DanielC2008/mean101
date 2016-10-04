@@ -76,8 +76,6 @@ function createMessage(reqOrMsg, res, next) {
 	// 	.create(msg)
 	// 	.then( msg => io.emit('newMessage', msg))
 	// 	.catch(console.error)
-
-
 }
 
 
@@ -85,4 +83,12 @@ io.on('connection', socket => {
 	console.log(`Socket connected: ${socket.id}`)
 	socket.on('disconnect', () => console.log(`Socket disconnected: ${socket.id}`))
 	socket.on('postMessage', createMessage)
+	socket.on('typing', (typing) => {
+    socket.broadcast.emit('typing', {
+    	user: typing.user
+    })
+  })
+  socket.on('stop typing', () => {
+    socket.broadcast.emit('stop typing')
+  })
 })

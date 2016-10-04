@@ -8,7 +8,7 @@ socket.on('disconnect', () => console.log('Socket disconnect'))
 
 angular
 	.module('mean101', ['ngRoute'])
-	.config($routeProvider =>
+	.config(($routeProvider) =>
 		$routeProvider
 			.when('/', {
 				controller: 'main',
@@ -25,7 +25,10 @@ angular
 			$scope.title = title
 		)
 	})
-	.controller('ChatCtrl', function($scope, $http) {
+	.controller('ChatCtrl', function($scope, $http, $window) {
+		let typing = false;
+		$scope.userTyping = false;
+
 		$scope.sendMessage = () => {
 			const msg = {
 				author: $scope.author,
@@ -33,11 +36,27 @@ angular
 			}
 			//instead of angular handling post we use the socket
 			if (socket.connected) {
-				return socket.emit('postMessage', msg)
+				socket.emit('postMessage', msg)
+				$scope.content = ''
+				return
+
 			}
 			$http.post('api/messages', msg)
 			.then(() => $scope.messages.push(msg))
 		}
+
+		$scope.$watch('content', (curr, old) => {
+			if (typing && curr.length === 0) {
+				typing = false
+				socket.emit('stop typing');
+			} else if (curr && curr.length > 0) {
+				typing = true
+				socket.emit('typing', {
+					user: $scope.author
+				})
+			}
+		})
+
 		//populating the initial messages
 		$http.get('/api/messages')
 			.then(({data: {messages}}) => {
@@ -50,4 +69,15 @@ angular
 			//scope.apply for async stuff
 			$scope.$apply()
 		})
+
+		socket.on('typing', (user) => {
+			$scope.userTyping = user.user
+			$scope.$apply()
+		})
+
+		socket.on('stop typing', () => {
+			$scope.userTyping = false
+			$scope.$apply()
+		})
 	})
+
