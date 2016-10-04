@@ -26,7 +26,8 @@ angular
 		)
 	})
 	.controller('ChatCtrl', function($scope, $http, $window) {
-		$scope.typing = false;
+		let typing = false;
+		$scope.isTyping = false;
 
 		$scope.sendMessage = () => {
 			const msg = {
@@ -36,7 +37,8 @@ angular
 			//instead of angular handling post we use the socket
 			if (socket.connected) {
 				socket.emit('postMessage', msg)
-				return $scope.content = ''
+				$scope.content = ''
+				return
 
 			}
 			$http.post('api/messages', msg)
@@ -44,10 +46,11 @@ angular
 		}
 
 		$scope.$watch('content', (curr, old) => {
-			console.log(curr);
-			if ($scope.typing && curr.length === 0) {
+			if (typing && curr.length === 0) {
+				typing = false
 				socket.emit('stop typing');
 			} else if (curr && curr.length > 0) {
+				typing = true
 				socket.emit('typing')
 			}
 		})
@@ -66,12 +69,12 @@ angular
 		})
 
 		socket.on('typing', () => {
-			$scope.typing = true
+			$scope.isTyping = true
 			$scope.$apply()
 		})
 
 		socket.on('stop typing', () => {
-			$scope.typing = false
+			$scope.isTyping = false
 			$scope.$apply()
 		})
 	})
