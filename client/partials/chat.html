@@ -11,5 +11,7 @@
 	<li ng-repeat="msg in messages">
 		{{msg.author}}: {{msg.content}}
 	</li>
-		{{isTyping ? "someone is typing" : ""}}
+	<div style="color:goldenrod;">
+		{{userTyping ? userTyping + " is typing" : ""}}
+	</div>
 </ul>

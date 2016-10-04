@@ -27,7 +27,7 @@ angular
 	})
 	.controller('ChatCtrl', function($scope, $http, $window) {
 		let typing = false;
-		$scope.isTyping = false;
+		$scope.userTyping = false;
 
 		$scope.sendMessage = () => {
 			const msg = {
@@ -51,7 +51,9 @@ angular
 				socket.emit('stop typing');
 			} else if (curr && curr.length > 0) {
 				typing = true
-				socket.emit('typing')
+				socket.emit('typing', {
+					user: $scope.author
+				})
 			}
 		})
 
@@ -68,13 +70,13 @@ angular
 			$scope.$apply()
 		})
 
-		socket.on('typing', () => {
-			$scope.isTyping = true
+		socket.on('typing', (user) => {
+			$scope.userTyping = user.user
 			$scope.$apply()
 		})
 
 		socket.on('stop typing', () => {
-			$scope.isTyping = false
+			$scope.userTyping = false
 			$scope.$apply()
 		})
 	})
